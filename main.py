@@ -1,18 +1,13 @@
-# from ik.forward_kinematics import forward_kinematics
+import numpy as np, json
 
-# joint_angles = [0, 45, -30, 0, 90, 45] # degree
-# pos, rot = forward_kinematics(joint_angles)
-
-# print("End-Effector Position:", pos)
-# print("Rotation Matrix:\n", rot)
-
-from ik.inverse_kinematics import inverse_kinematics
-import json
+from ik.inverse_kinematics import inverse_kinematics_full
 
 with open("config/robot_config.json", "r") as f:
   config = json.load(f)
 
-target = [30.0, 20.0, 25.0] # target XYZ in cm
-angles = inverse_kinematics(*target, config)
+# Desired pose
+target_pos = [30.0, 20.0, 25.0] # target XYZ in cm
+target_rot = np.eye(3) # identity rotation for now (no rotation)
 
-print("J1-J3 Angles:", angles)
+angles = inverse_kinematics_full(*target_pos, target_rot, config)
+print("theta1-theta6:", angles)
