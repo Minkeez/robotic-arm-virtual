@@ -17,21 +17,32 @@ def dh_transform(a, alpha, d, theta_deg):
     [0,              0,                            0,                           1]
   ])
 
+def get_dh_table(joint_angles, link_lengths):
+  # theta = input angle (joint_angles), all others fixed
+  # Format: (a, alpha, d, theta)
+  return [
+    (0,  90, link_lengths[0], joint_angles[0]), # J1
+    (0,   0, link_lengths[1], joint_angles[1]), # J2
+    (0,   0, link_lengths[2], joint_angles[2]), # J3
+    (0,  90,             0.0, joint_angles[3]), # J4
+    (0, -90,             0.0, joint_angles[4]), # J5
+    (0,   0, link_lengths[4], joint_angles[5])  # J6
+  ]
+
 def forward_kinematics(joint_angles):
   config = load_robot_config()
-  L = config["link_lengths"]
+  dof = config['dof']
+  link_lengths = config["link_lengths"]
 
-  theta1, theta2, theta3, theta4, theta5, theta6 = joint_angles # degrees
+  if len(joint_angles) != dof:
+    raise ValueError(f"Expected {dof} joint angles, got {len(joint_angles)}.")
+  
+  dh_params = get_dh_table(joint_angles, link_lengths)
 
-  # DH params (a, alpha, d, theta)
-  T1 = dh_transform(0,  90, L[0], theta1)
-  T2 = dh_transform(0,   0, L[1], theta2)
-  T3 = dh_transform(0,   0, L[2], theta3)
-  T4 = dh_transform(0,   0,    0, theta4)
-  T5 = dh_transform(0, -90,    0, theta5)
-  T6 = dh_transform(0,   0, L[4], theta6)
+  T = np.eye(4)
+  for a, alpha, d, theta in dh_params:
+    T = T @ dh_transform(a, alpha, d, theta)
 
-  T = T1 @ T2 @ T3 @ T4 @ T5 @ T6
   position = T[:3, 3]
   orientation = T[:3, :3]
 
