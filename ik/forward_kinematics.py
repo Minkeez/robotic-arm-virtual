@@ -47,3 +47,25 @@ def forward_kinematics(joint_angles):
   orientation = T[:3, :3]
 
   return position, orientation
+
+def compute_all_joint_positions(joint_angles, config):
+  L = config["link_lengths"]
+  theta1, theta2, theta3, theta4, theta5, theta6 = joint_angles
+
+  dh_params = [
+    (0,  90, L[0], theta1),
+    (0,   0, L[1], theta2),
+    (0,   0, L[2], theta3),
+    (0,  90,  0.0, theta4),
+    (0, -90,  0.0, theta5),
+    (0,   0, L[4], theta6),
+  ]
+
+  T = np.eye(4)
+  positions = [T[:3, 3].copy()] # Base position at origin
+
+  for a, alpha, d, theta in dh_params:
+    T = T @ dh_transform(a, alpha, d, theta)
+    positions.append(T[:3, 3].copy())
+  
+  return positions # List of XYZ coords of joints 0-6
