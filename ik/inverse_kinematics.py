@@ -4,6 +4,14 @@ from math import atan2, sqrt, acos, degrees, radians
 
 from ik.forward_kinematics import dh_transform
 
+def check_joint_limits(joint_angles, config):
+  joint_limits = config["joint_limits"]
+  for i, angle in enumerate(joint_angles):
+    min_limit, max_limit = joint_limits[i]
+    if not (min_limit <= angle <= max_limit):
+      return False
+  return True
+
 def inverse_kinematics(x, y, z, config):
   L1, L2, L3 = config['link_lengths'][:3]
 
@@ -17,7 +25,8 @@ def inverse_kinematics(x, y, z, config):
   # Step 3: Solve theta2, theta3 using cosing law
   D = (r**2 + z_eff**2 - L2**2 - L3**2) / (2 * L2 * L3)
   if D < -1 or D > 1:
-    raise ValueError("Target position is unreachable")
+    print("Warning: IK target is unreachable")
+    return None
   
   theta3 = degrees(acos(D)) # Elbow angle
   theta2 = degrees(atan2(z_eff, r) - atan2(L3 * np.sin(radians(theta3)), L2 + L3 * np.cos(radians(theta3))))
@@ -61,5 +70,14 @@ def solve_wrist_orientation(R_target, joint_angles_1_3, config):
 
 def inverse_kinematics_full(x, y, z, R_target, config):
   joint_angles_1_3 = inverse_kinematics(x, y, z, config)
+  if joint_angles_1_3 is None:
+    return None
+
   joint_angles_4_6 = solve_wrist_orientation(R_target, joint_angles_1_3, config)
-  return joint_angles_1_3 + joint_angles_4_6
+  full_joint_angles = joint_angles_1_3 + joint_angles_4_6
+
+  if not check_joint_limits(full_joint_angles, config):
+    print("Warning: IK solution violates joint limits")
+    return None
+
+  return full_joint_angles
