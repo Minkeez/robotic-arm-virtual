@@ -12,26 +12,29 @@ def check_joint_limits(joint_angles, config):
       return False
   return True
 
-def inverse_kinematics(x, y, z, config):
+def inverse_kinematics(x, y, z, config, elbow_up=False):
   L1, L2, L3 = config['link_lengths'][:3]
 
-  # Step 1: Solve theta1 (base rotation)
   theta1 = degrees(atan2(y, x))
-
-  # Step 2: Calculate wrist position relative to base
   r = sqrt(x**2 + y**2)
-  z_eff = z - L1 # subtract base height
+  z_eff = z - L1
 
-  # Step 3: Solve theta2, theta3 using cosing law
   D = (r**2 + z_eff**2 - L2**2 - L3**2) / (2 * L2 * L3)
   if D < -1 or D > 1:
     print("Warning: IK target is unreachable")
     return None
   
-  theta3 = degrees(acos(D)) # Elbow angle
-  theta2 = degrees(atan2(z_eff, r) - atan2(L3 * np.sin(radians(theta3)), L2 + L3 * np.cos(radians(theta3))))
+  # Choose sign based on elbow direction
+  sign = -1 if elbow_up else 1
+  theta3 = degrees(sign * acos(D))
 
-  # Return angles for J1-J3
+  # Adjust theta2 based on elbow config
+  theta2 = degrees(
+    atan2(z_eff, r) - 
+    atan2(L3 * np.sin(radians(theta3)), 
+          L2 + L3 * np.cos(radians(theta3)))
+  )
+
   return [theta1, theta2, theta3]
 
 def solve_wrist_orientation(R_target, joint_angles_1_3, config):
@@ -68,8 +71,8 @@ def solve_wrist_orientation(R_target, joint_angles_1_3, config):
 
   return [theta4, theta5, theta6]
 
-def inverse_kinematics_full(x, y, z, R_target, config):
-  joint_angles_1_3 = inverse_kinematics(x, y, z, config)
+def inverse_kinematics_full(x, y, z, R_target, config, elbow_up=False):
+  joint_angles_1_3 = inverse_kinematics(x, y, z, config, elbow_up=elbow_up)
   if joint_angles_1_3 is None:
     return None
 

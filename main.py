@@ -6,12 +6,18 @@ with open("config/robot_config.json", "r") as f:
   config = json.load(f)
 
 # Desired pose
-target_pos = [30.0, 20.0, 25.0] # target XYZ in cm - Reachable
-target_pos = [100, 100, 100] # test - Unreachable
+target_pos = [30, 20, 25] # target XYZ in cm - Reachable
 target_rot = np.eye(3) # identity rotation for now (no rotation)
 
-angles = inverse_kinematics_full(*target_pos, target_rot, config)
-if angles is None:
-  print("No valid IK solution found.")
+angles_up = inverse_kinematics_full(*target_pos, target_rot, config, elbow_up=True)
+angles_down = inverse_kinematics_full(*target_pos, target_rot, config, elbow_up=False)
+
+if angles_up is not None:
+  print("Elbow-Up Solution:", [round(a, 2) for a in angles_up])
 else:
-  print("theta1-theta6:", angles)
+  print("Elbow-Up: No solution")
+
+if angles_down is not None:
+  print("Elbow-Down Solution:", [round(a, 2) for a in angles_down])
+else:
+  print("Elbow-Down: No solution")
