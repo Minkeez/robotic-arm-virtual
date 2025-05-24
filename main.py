@@ -1,16 +1,17 @@
-from planning.path_planner import astar
+from planning.path_planner import astar, generate_real_world_grid, cm_to_grid, grid_to_cm
 
-# 0 = free, 1 = obstacle
-grid = [
-  [0, 0, 0, 0, 0, 0],
-  [0, 1, 1, 1, 0, 0],
-  [0, 0, 0, 1, 0, 0],
-  [0, 0, 0, 1, 0, 0],
-  [0, 0, 0, 0, 0, 0]
-]
+grid = generate_real_world_grid()
 
-start = (0,0)
-goal = (5, 4)
+start_cm = (20, 20)
+goal_cm = (100, 80)
 
-path = astar(grid, start, goal)
-print("Path:", path)
+start_grid = cm_to_grid(*start_cm)
+goal_grid = cm_to_grid(*goal_cm)
+
+path_grid = astar(grid, start_grid, goal_grid)
+
+if path_grid:
+  path_cm = [grid_to_cm(x, y) for (x, y) in path_grid]
+  print("Path (cm):", path_cm)
+else:
+  print("No path found")

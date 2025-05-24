@@ -61,3 +61,20 @@ def reconstruct_path(node):
     node = node.parent
 
   return path[::-1] # reverse
+
+def generate_real_world_grid(width=24, height=24):
+  grid = [[0 for _ in range(width)] for _ in range(height)]
+
+  # Add obstacles (1 = blocked)
+  # Example: obstacle block in center
+  for y in range(10, 14):
+    for x in range(10, 14):
+      grid[y][x] = 1
+  
+  return grid
+
+def cm_to_grid(x_cm, y_cm, resolution=5):
+  return int(x_cm // resolution), int(y_cm // resolution)
+
+def grid_to_cm(x_grid, y_grid, resolution=5):
+  return x_grid * resolution, y_grid * resolution
