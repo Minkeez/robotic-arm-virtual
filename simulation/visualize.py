@@ -70,3 +70,10 @@ def animate_arm_motion(start_angles, end_angles, config, steps=100, interval=50)
 
   ani = FuncAnimation(fig, update, frames=steps, interval=interval, blit=False)
   plt.show()
+
+# Interpolate between each pair of waypoints (smooth arm movement)
+def animate_full_ik_path(ik_path, config, steps_per_segment=20):
+  for i in range(len(ik_path)-1):
+    start = ik_path[i]
+    end = ik_path[i+1]
+    animate_arm_motion(start, end, config, steps=steps_per_segment)

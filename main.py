@@ -1,17 +1,30 @@
-from planning.path_planner import astar, generate_real_world_grid, cm_to_grid, grid_to_cm
+import json
+import numpy as np
 
-grid = generate_real_world_grid()
+from ik.inverse_kinematics import inverse_kinematics_full
+from simulation.visualize import animate_arm_motion
 
-start_cm = (20, 20)
-goal_cm = (100, 80)
+# Load config
+with open("config/robot_config.json", "r") as f:
+  config = json.load(f)
 
-start_grid = cm_to_grid(*start_cm)
-goal_grid = cm_to_grid(*goal_cm)
+# Load command (target pose)
+with open("input/commands.json", "r") as f:
+  data = json.load(f)
 
-path_grid = astar(grid, start_grid, goal_grid)
+target_pos = data["target"]["position"]
+target_rot = np.array(data["target"]["orientation"])
 
-if path_grid:
-  path_cm = [grid_to_cm(x, y) for (x, y) in path_grid]
-  print("Path (cm):", path_cm)
+# Use IK to get target joint angles
+target_angles = inverse_kinematics_full(*target_pos, target_rot, config, elbow_up=False)
+
+if target_angles is None:
+  print("No valid IK solution found.")
 else:
-  print("No path found")
+  print("Target joint angles:", [round(a, 2) for a in target_angles])
+
+  # Set current joint state (FK pose)
+  start_angles = [0, 0, 0, 0, 0, 0]
+
+  # Animate from FK → IK target
+  animate_arm_motion(start_angles, target_angles, config)
