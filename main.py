@@ -2,7 +2,7 @@ import numpy as np, json
 
 from ik.forward_kinematics import compute_all_joint_positions
 from ik.inverse_kinematics import inverse_kinematics_full
-from simulation.visualize import plot_arm
+from simulation.visualize import animate_arm_motion
 
 with open("config/robot_config.json", "r") as f:
   config = json.load(f)
@@ -24,6 +24,7 @@ with open("config/robot_config.json", "r") as f:
 # else:
 #   print("Elbow-Down: No solution")
 
-joint_angles = [0, 45, -30, 0, 90, 45]
-positions = compute_all_joint_positions(joint_angles, config)
-plot_arm(positions)
+start = [0, 0, 0, 0, 0, 0]
+target = [0, 45, -30, 0, 90, 45]
+
+animate_arm_motion(start, target, config)
